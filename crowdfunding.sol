@@ -6,11 +6,11 @@ contract mtcToken {
     string public name = "Metacrafters";
     string public symbol = "mtc";
     uint8 public decimals = 18; // Number of coins to be created.
-    uint public totalSupply = 1000000000 * (10 ** decimals);
+    uint private totalSupplies = 1000000000 * (10 ** decimals);
     address owner;
 
     mapping(address => uint) public balanceOf;
-    mapping(address => mapping(address => uint)) public allowance;
+    mapping(address => mapping(address => uint)) private allowances;
 
     event Transfer(address indexed from, address indexed to, uint value);
     event Approval(address indexed owner, address indexed spender, uint value);
@@ -18,7 +18,11 @@ contract mtcToken {
 
     constructor(address _owner) {
         owner = _owner;
-        balanceOf[_owner] = totalSupply;
+        balanceOf[_owner] = totalSupplies;
+    }
+
+    function totalSupply() public view returns(uint){
+        return totalSupplies;
     }
 
     function transfer(address to, uint value) public returns (bool) {
@@ -36,17 +40,21 @@ contract mtcToken {
     }
 
     function approve(address spender, uint value) public returns (bool) {
-        allowance[msg.sender][spender] = value;
+        allowances[msg.sender][spender] = value;
         emit Approval(owner, spender, value);
         return true;
     }
 
+    function allowance(address spender) public view returns (uint256) {
+        return allowances[owner][spender];
+    }
+
     function transferFrom(address from, address to, uint value) public returns (bool) {
         require(balanceOf[from] >= value, "Insufficient balance");
-        require(allowance[from][msg.sender] >= value, "Not authorized");
+        require(allowances[from][msg.sender] >= value, "Not authorized");
         balanceOf[from] -= value;
         balanceOf[to] += value;
-        allowance[from][owner] -= value;
+        allowances[from][owner] -= value;
         emit Transfer(from, to, value);
         return true;
     }
